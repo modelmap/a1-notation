@@ -5,8 +5,7 @@
  *
  *	@return {boolean}
  */
-export default function<T>(n: T, strict: boolean = true): boolean
-{
-	let isNumber = typeof n === 'number' && Number.isInteger(n);
-	return strict ? (isNumber && +n > 0) : isNumber;
+export default function <T>(n: T, strict: boolean = true): boolean {
+  let isNumber = typeof n === "number" && n % 1 === 0;
+  return strict ? isNumber && +n > 0 : isNumber;
 }

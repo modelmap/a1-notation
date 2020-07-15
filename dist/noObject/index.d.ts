@@ -3,8 +3,8 @@
  *	Supports A1 notation like "A1" and "A1:B2"
  *	@author FLighter
  */
-import options from './options/options';
-declare class A1 {
+import options from "./options/options";
+export declare class A1 {
     private static _reg;
     /**
      *	Example: A1:B2
@@ -269,4 +269,3 @@ declare class A1 {
      */
     shift(offsetX: number, offsetY: number): this;
 }
-export default A1;

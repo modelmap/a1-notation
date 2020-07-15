@@ -1,4 +1,4 @@
-var A1 = (function () {
+var A1 = (function (exports) {
 	'use strict';
 
 	/**
@@ -89,8 +89,8 @@ var A1 = (function () {
 	 *	@return {boolean}
 	 */
 	function isValidNumber (n, strict = true) {
-	    let isNumber = typeof n === 'number' && Number.isInteger(n);
-	    return strict ? (isNumber && +n > 0) : isNumber;
+	    let isNumber = typeof n === "number" && n % 1 === 0;
+	    return strict ? isNumber && +n > 0 : isNumber;
 	}
 
 	/**
@@ -137,13 +137,13 @@ var A1 = (function () {
 	            throw new A1Error().wasUnknown();
 	        let type = typeof something;
 	        // Object
-	        if (something && type === 'object')
+	        if (something && type === "object")
 	            this._initObject.apply(this, arguments);
 	        // Number
-	        else if (type === 'number')
+	        else if (type === "number")
 	            this._initNumber.apply(this, arguments);
 	        // String
-	        else if (type === 'string')
+	        else if (type === "string")
 	            this._initString.apply(this, arguments);
 	        // Unknown argument
 	        else
@@ -160,7 +160,8 @@ var A1 = (function () {
 	        let [, cs, // col start // A
 	        rs, // row start // 1
 	        ce, // col end 	// B
-	        re,] = a1.toUpperCase().match(this._reg);
+	        re // row end 	// 2
+	        ] = a1.toUpperCase().match(this._reg);
 	        ce = ce || cs;
 	        re = re || rs;
 	        let colStart = this._A1Col(cs, converter), colEnd = this._A1Col(ce, converter), rowStart = A1Row(rs), rowEnd = A1Row(re);
@@ -169,7 +170,7 @@ var A1 = (function () {
 	            cs: colEnd > colStart ? colStart : colEnd,
 	            rs: rowEnd > rowStart ? rowStart : rowEnd,
 	            ce: colEnd > colStart ? colEnd : colStart,
-	            re: rowEnd > rowStart ? rowEnd : rowStart,
+	            re: rowEnd > rowStart ? rowEnd : rowStart
 	        };
 	    }
 	    /**
@@ -294,27 +295,35 @@ var A1 = (function () {
 	     *	@param {options[]} args
 	     */
 	    _initObject(...args) {
-	        const isString = (some) => typeof some === 'string', areEmpty = (all, excludingKeys) => {
+	        const isString = (some) => typeof some === "string", areEmpty = (all, excludingKeys) => {
 	            !Array.isArray(excludingKeys) && (excludingKeys = [excludingKeys]);
 	            for (let key in all)
-	                if (!excludingKeys.includes(key) && all[key].val)
+	                if (excludingKeys.indexOf(key) === -1 && all[key].val)
 	                    return false;
 	            return true;
 	        };
 	        let options = args[0], { converter } = options;
-	        if (converter && ![1, 2].includes(converter))
+	        if (converter && [1, 2].indexOf(converter) === -1)
 	            throw new A1Error({ converter }).wasUnknown();
 	        this._converter = converter || 1;
 	        // Create object with types
 	        let all = {};
-	        ['colStart', 'rowStart', 'colEnd', 'rowEnd', 'a1Start', 'a1End', 'nCols', 'nRows'].forEach(key => {
+	        [
+	            "colStart",
+	            "rowStart",
+	            "colEnd",
+	            "rowEnd",
+	            "a1Start",
+	            "a1End",
+	            "nCols",
+	            "nRows"
+	        ].forEach(key => {
 	            let val = options[key];
-	            all[key] =
-	                {
-	                    isString: isString(val),
-	                    isNumber: isValidNumber(val),
-	                    val,
-	                };
+	            all[key] = {
+	                isString: isString(val),
+	                isNumber: isValidNumber(val),
+	                val
+	            };
 	        });
 	        let { colStart, rowStart, colEnd, rowEnd, a1Start, a1End, nCols, nRows } = all;
 	        /**
@@ -324,67 +333,103 @@ var A1 = (function () {
 	            /**
 	             *	a1Start
 	             */
-	            case (a1Start.isString && areEmpty(all, 'a1Start')):
+	            case a1Start.isString && areEmpty(all, "a1Start"):
 	                return this._initString(a1Start.val);
 	            /**
 	             *	a1Start, a1End
 	             */
-	            case (a1Start.isString && a1End.isString && areEmpty(all, ['a1Start', 'a1End'])):
+	            case a1Start.isString &&
+	                a1End.isString &&
+	                areEmpty(all, ["a1Start", "a1End"]):
 	                return this._initString(a1Start.val, a1End.val);
 	            /**
 	             *	colStart, rowStart (string, string)
 	             */
-	            case (colStart.isString && rowStart.isString && areEmpty(all, ['colStart', 'rowStart'])):
+	            case colStart.isString &&
+	                rowStart.isString &&
+	                areEmpty(all, ["colStart", "rowStart"]):
 	                return this._initString(colStart.val + rowStart.val);
 	            /**
 	             *	colStart, rowStart (number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && areEmpty(all, ['colStart', 'rowStart'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart"]):
 	                return this._initNumber(colStart.val, rowStart.val);
 	            /**
 	             *	colStart, rowStart, nRows (number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && nRows.isNumber && areEmpty(all, ['colStart', 'rowStart', 'nRows'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                nRows.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "nRows"]):
 	                return this._initNumber(colStart.val, rowStart.val, nRows.val);
 	            /**
 	             *	colStart, rowStart, nCols (number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && nCols.isNumber && areEmpty(all, ['colStart', 'rowStart', 'nCols'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                nCols.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "nCols"]):
 	                return this._initNumber(colStart.val, rowStart.val, 1, nCols.val);
 	            /**
 	             *	colStart, rowStart, nRows, nCols (number, number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && nRows.isNumber && nCols.isNumber && areEmpty(all, ['colStart', 'rowStart', 'nRows', 'nCols'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                nRows.isNumber &&
+	                nCols.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "nRows", "nCols"]):
 	                return this._initNumber(colStart.val, rowStart.val, nRows.val, nCols.val);
 	            /**
 	             *	colStart, rowStart, colEnd (string, string, string)
 	             */
-	            case (colStart.isString && rowStart.isString && colEnd.isString && areEmpty(all, ['colStart', 'rowStart', 'colEnd'])):
+	            case colStart.isString &&
+	                rowStart.isString &&
+	                colEnd.isString &&
+	                areEmpty(all, ["colStart", "rowStart", "colEnd"]):
 	                return this._initString(`${colStart.val}${rowStart.val}:${colEnd.val}${rowStart.val}`);
 	            /**
 	             *	colStart, rowStart, colEnd (number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && colEnd.isNumber && areEmpty(all, ['colStart', 'rowStart', 'colEnd'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                colEnd.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "colEnd"]):
 	                return this._initNumber(colStart.val, rowStart.val, 1, colEnd.val - colStart.val + 1);
 	            /**
 	             *	colStart, rowStart, rowEnd (string, string, string)
 	             */
-	            case (colStart.isString && rowStart.isString && rowEnd.isString && areEmpty(all, ['colStart', 'rowStart', 'rowEnd'])):
+	            case colStart.isString &&
+	                rowStart.isString &&
+	                rowEnd.isString &&
+	                areEmpty(all, ["colStart", "rowStart", "rowEnd"]):
 	                return this._initString(`${colStart.val}${rowStart.val}:${colStart.val}${rowEnd.val}`);
 	            /**
 	             *	colStart, rowStart, rowEnd (number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && rowEnd.isNumber && areEmpty(all, ['colStart', 'rowStart', 'rowEnd'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                rowEnd.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "rowEnd"]):
 	                return this._initNumber(colStart.val, rowStart.val, rowEnd.val - rowStart.val + 1);
 	            /**
 	             *	colStart, rowStart, colEnd, rowEnd (string, string, string, string)
 	             */
-	            case (colStart.isString && rowStart.isString && colEnd.isString && rowEnd.isString && areEmpty(all, ['colStart', 'rowStart', 'colEnd', 'rowEnd'])):
+	            case colStart.isString &&
+	                rowStart.isString &&
+	                colEnd.isString &&
+	                rowEnd.isString &&
+	                areEmpty(all, ["colStart", "rowStart", "colEnd", "rowEnd"]):
 	                return this._initString(`${colStart.val}${rowStart.val}:${colEnd.val}${rowEnd.val}`);
 	            /**
 	             *	colStart, rowStart, colEnd, rowEnd (number, number, number, number)
 	             */
-	            case (colStart.isNumber && rowStart.isNumber && colEnd.isNumber && rowEnd.isNumber && areEmpty(all, ['colStart', 'rowStart', 'colEnd', 'rowEnd'])):
+	            case colStart.isNumber &&
+	                rowStart.isNumber &&
+	                colEnd.isNumber &&
+	                rowEnd.isNumber &&
+	                areEmpty(all, ["colStart", "rowStart", "colEnd", "rowEnd"]):
 	                return this._initNumber(colStart.val, rowStart.val, rowEnd.val - rowStart.val + 1, colEnd.val - colStart.val + 1);
 	            /**
 	             *	Invalid arguments combination
@@ -406,7 +451,7 @@ var A1 = (function () {
 	        nCols = nCols || 1;
 	        let all = [col, row, nRows, nCols];
 	        if (!all.every(n => isValidNumber(n)))
-	            throw new A1Error(all.join(', ')).wasNumber();
+	            throw new A1Error(all.join(", ")).wasNumber();
 	        this._colStart = col; // the first col
 	        this._rowStart = row; // the first row
 	        this._colEnd = col + nCols - 1; // how many cols in total (cols length)
@@ -466,7 +511,7 @@ var A1 = (function () {
 	            rowEnd: this._rowEnd,
 	            a1: this.get(),
 	            rowsCount: this._rowEnd - this._rowStart + 1,
-	            colsCount: this._colEnd - this._colStart + 1,
+	            colsCount: this._colEnd - this._colStart + 1
 	        };
 	    }
 	    /**
@@ -522,10 +567,8 @@ var A1 = (function () {
 	    addX(count) {
 	        if (!isValidNumber(count, false))
 	            throw new A1Error(count).wasUnknown();
-	        count >= 0
-	            ? this._colEnd += count
-	            : this._colStart += count;
-	        (this._colStart <= 0) && (this._colStart = 1);
+	        count >= 0 ? (this._colEnd += count) : (this._colStart += count);
+	        this._colStart <= 0 && (this._colStart = 1);
 	        return this;
 	    }
 	    /**
@@ -539,10 +582,8 @@ var A1 = (function () {
 	    addY(count) {
 	        if (!isValidNumber(count, false))
 	            throw new A1Error(count).wasUnknown();
-	        count >= 0
-	            ? this._rowEnd += count
-	            : this._rowStart += count;
-	        (this._rowStart <= 0) && (this._rowStart = 1);
+	        count >= 0 ? (this._rowEnd += count) : (this._rowStart += count);
+	        this._rowStart <= 0 && (this._rowStart = 1);
 	        return this;
 	    }
 	    /**
@@ -570,11 +611,11 @@ var A1 = (function () {
 	            throw new A1Error(count).wasUnknown();
 	        if (count >= 0) {
 	            this._colEnd -= count;
-	            (this._colEnd < this._colStart) && (this._colEnd = this._colStart);
+	            this._colEnd < this._colStart && (this._colEnd = this._colStart);
 	        }
 	        else {
 	            this._colStart -= count;
-	            (this._colStart > this._colEnd) && (this._colStart = this._colEnd);
+	            this._colStart > this._colEnd && (this._colStart = this._colEnd);
 	        }
 	        return this;
 	    }
@@ -591,11 +632,11 @@ var A1 = (function () {
 	            throw new A1Error(count).wasUnknown();
 	        if (count >= 0) {
 	            this._rowEnd -= count;
-	            (this._rowEnd < this._rowStart) && (this._rowEnd = this._rowStart);
+	            this._rowEnd < this._rowStart && (this._rowEnd = this._rowStart);
 	        }
 	        else {
 	            this._rowStart -= count;
-	            (this._rowStart > this._rowEnd) && (this._rowStart = this._rowEnd);
+	            this._rowStart > this._rowEnd && (this._rowStart = this._rowEnd);
 	        }
 	        return this;
 	    }
@@ -659,7 +700,9 @@ var A1 = (function () {
 	// Regular expression for parsing
 	A1._reg = /^([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/;
 
-	return A1;
+	exports.A1 = A1;
 
-}());
+	return exports;
+
+}({}));
 //# sourceMappingURL=index.next.js.map

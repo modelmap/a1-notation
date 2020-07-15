@@ -1,4 +1,4 @@
-var A1 = (function () {
+var A1 = (function (exports) {
 	'use strict';
 
 	/**
@@ -89,8 +89,8 @@ var A1 = (function () {
 	 *	@return {boolean}
 	 */
 	function isValidNumber (n, strict = true) {
-	    let isNumber = typeof n === 'number' && Number.isInteger(n);
-	    return strict ? (isNumber && +n > 0) : isNumber;
+	    let isNumber = typeof n === "number" && n % 1 === 0;
+	    return strict ? isNumber && +n > 0 : isNumber;
 	}
 
 	/**
@@ -137,10 +137,10 @@ var A1 = (function () {
 	            throw new A1Error().wasUnknown();
 	        let type = typeof something;
 	        // Number
-	        if (type === 'number')
+	        if (type === "number")
 	            this._initNumber.apply(this, arguments);
 	        // String
-	        else if (type === 'string')
+	        else if (type === "string")
 	            this._initString.apply(this, arguments);
 	        // Unknown argument
 	        else
@@ -157,7 +157,8 @@ var A1 = (function () {
 	        let [, cs, // col start // A
 	        rs, // row start // 1
 	        ce, // col end 	// B
-	        re,] = a1.toUpperCase().match(this._reg);
+	        re // row end 	// 2
+	        ] = a1.toUpperCase().match(this._reg);
 	        ce = ce || cs;
 	        re = re || rs;
 	        let colStart = this._A1Col(cs, converter), colEnd = this._A1Col(ce, converter), rowStart = A1Row(rs), rowEnd = A1Row(re);
@@ -166,7 +167,7 @@ var A1 = (function () {
 	            cs: colEnd > colStart ? colStart : colEnd,
 	            rs: rowEnd > rowStart ? rowStart : rowEnd,
 	            ce: colEnd > colStart ? colEnd : colStart,
-	            re: rowEnd > rowStart ? rowEnd : rowStart,
+	            re: rowEnd > rowStart ? rowEnd : rowStart
 	        };
 	    }
 	    /**
@@ -298,7 +299,7 @@ var A1 = (function () {
 	        nCols = nCols || 1;
 	        let all = [col, row, nRows, nCols];
 	        if (!all.every(n => isValidNumber(n)))
-	            throw new A1Error(all.join(', ')).wasNumber();
+	            throw new A1Error(all.join(", ")).wasNumber();
 	        this._colStart = col; // the first col
 	        this._rowStart = row; // the first row
 	        this._colEnd = col + nCols - 1; // how many cols in total (cols length)
@@ -358,7 +359,7 @@ var A1 = (function () {
 	            rowEnd: this._rowEnd,
 	            a1: this.get(),
 	            rowsCount: this._rowEnd - this._rowStart + 1,
-	            colsCount: this._colEnd - this._colStart + 1,
+	            colsCount: this._colEnd - this._colStart + 1
 	        };
 	    }
 	    /**
@@ -414,10 +415,8 @@ var A1 = (function () {
 	    addX(count) {
 	        if (!isValidNumber(count, false))
 	            throw new A1Error(count).wasUnknown();
-	        count >= 0
-	            ? this._colEnd += count
-	            : this._colStart += count;
-	        (this._colStart <= 0) && (this._colStart = 1);
+	        count >= 0 ? (this._colEnd += count) : (this._colStart += count);
+	        this._colStart <= 0 && (this._colStart = 1);
 	        return this;
 	    }
 	    /**
@@ -431,10 +430,8 @@ var A1 = (function () {
 	    addY(count) {
 	        if (!isValidNumber(count, false))
 	            throw new A1Error(count).wasUnknown();
-	        count >= 0
-	            ? this._rowEnd += count
-	            : this._rowStart += count;
-	        (this._rowStart <= 0) && (this._rowStart = 1);
+	        count >= 0 ? (this._rowEnd += count) : (this._rowStart += count);
+	        this._rowStart <= 0 && (this._rowStart = 1);
 	        return this;
 	    }
 	    /**
@@ -462,11 +459,11 @@ var A1 = (function () {
 	            throw new A1Error(count).wasUnknown();
 	        if (count >= 0) {
 	            this._colEnd -= count;
-	            (this._colEnd < this._colStart) && (this._colEnd = this._colStart);
+	            this._colEnd < this._colStart && (this._colEnd = this._colStart);
 	        }
 	        else {
 	            this._colStart -= count;
-	            (this._colStart > this._colEnd) && (this._colStart = this._colEnd);
+	            this._colStart > this._colEnd && (this._colStart = this._colEnd);
 	        }
 	        return this;
 	    }
@@ -483,11 +480,11 @@ var A1 = (function () {
 	            throw new A1Error(count).wasUnknown();
 	        if (count >= 0) {
 	            this._rowEnd -= count;
-	            (this._rowEnd < this._rowStart) && (this._rowEnd = this._rowStart);
+	            this._rowEnd < this._rowStart && (this._rowEnd = this._rowStart);
 	        }
 	        else {
 	            this._rowStart -= count;
-	            (this._rowStart > this._rowEnd) && (this._rowStart = this._rowEnd);
+	            this._rowStart > this._rowEnd && (this._rowStart = this._rowEnd);
 	        }
 	        return this;
 	    }
@@ -551,7 +548,9 @@ var A1 = (function () {
 	// Regular expression for parsing
 	A1._reg = /^([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/;
 
-	return A1;
+	exports.A1 = A1;
 
-}());
+	return exports;
+
+}({}));
 //# sourceMappingURL=index.next.js.map
